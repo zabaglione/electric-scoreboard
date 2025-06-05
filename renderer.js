@@ -3,12 +3,16 @@ const { shell } = require('electron');
 const Logger = require('./src/logger');
 
 // ログ設定をメインプロセスから取得して初期化
-let logger;
+let logger = new Logger(false); // デフォルトはオフで初期化
+
+// 非同期でデバッグモードを取得して更新
 ipcRenderer.invoke('get-debug-mode').then(isDebug => {
   logger = new Logger(isDebug);
   if (isDebug) {
-    console.log('RSS ニュース電光掲示板 - レンダラープロセス起動');
+    logger.debug('RSS ニュース電光掲示板 - レンダラープロセス起動');
   }
+}).catch(error => {
+  console.error('Failed to get debug mode:', error);
 });
 
 const tickerContent = document.getElementById('ticker-content');

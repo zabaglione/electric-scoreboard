@@ -60,6 +60,7 @@ npm run debug
 # 直接起動時のオプション
 electron . --debug        # デバッグログ有効
 electron . -d             # デバッグログ有効（短縮形）
+DEBUG_MODE=true electron . # 環境変数でデバッグログ有効
 
 # テスト実行
 npm test                    # 単体テスト

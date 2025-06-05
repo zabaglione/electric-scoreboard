@@ -4,8 +4,11 @@ const RSSManager = require('./src/rss-manager');
 const StoreManager = require('./src/store-manager');
 const Logger = require('./src/logger');
 
-// コマンドライン引数からデバッグモードを判定
-const isDebugMode = process.argv.includes('--debug') || process.argv.includes('-d') || process.env.NODE_ENV === 'development';
+// コマンドライン引数または環境変数からデバッグモードを判定
+const isDebugMode = process.argv.includes('--debug') || 
+                   process.argv.includes('-d') || 
+                   process.env.NODE_ENV === 'development' || 
+                   process.env.DEBUG_MODE === 'true';
 
 // ロガーを初期化（デフォルトはoff）
 const logger = new Logger(isDebugMode);
@@ -305,7 +308,8 @@ function createTray() {
     }
   });
   } catch (error) {
-    console.error('Failed to create tray:', error);
+    // Trayの作成失敗はアプリの動作に影響しないので、デバッグログのみ
+    logger.debug('Failed to create tray:', error.message);
   }
 }
 
