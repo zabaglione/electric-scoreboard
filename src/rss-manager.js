@@ -1,8 +1,10 @@
 const Parser = require('rss-parser');
+const Logger = require('./logger');
 
 class RSSManager {
-    constructor() {
+    constructor(logger = null) {
         this.parser = new Parser();
+        this.logger = logger;
         this.feeds = [];
         this.articles = [];
         this.defaultFeeds = [
@@ -16,7 +18,9 @@ class RSSManager {
 
     async fetchRSSFeed(feedUrl, feedName = 'Unknown') {
         try {
-            console.log(`Fetching RSS feed from: ${feedUrl}`);
+            if (this.logger) {
+                this.logger.debug(`Fetching RSS feed from: ${feedUrl}`);
+            }
             const feed = await this.parser.parseURL(feedUrl);
             
             const normalizedArticles = feed.items.slice(0, 10).map(item => ({

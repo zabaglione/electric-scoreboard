@@ -2,6 +2,17 @@ const { app, BrowserWindow, ipcMain, Menu, shell, globalShortcut, Tray } = requi
 const path = require('path');
 const RSSManager = require('./src/rss-manager');
 const StoreManager = require('./src/store-manager');
+const Logger = require('./src/logger');
+
+// コマンドライン引数からデバッグモードを判定
+const isDebugMode = process.argv.includes('--debug') || process.argv.includes('-d') || process.env.NODE_ENV === 'development';
+
+// ロガーを初期化（デフォルトはoff）
+const logger = new Logger(isDebugMode);
+
+if (isDebugMode) {
+  console.log('デバッグモードで起動しました');
+}
 
 let mainWindow;
 let settingsWindow;
@@ -11,7 +22,7 @@ let updateInterval;
 let tray = null;
 
 function createWindow() {
-  rssManager = new RSSManager();
+  rssManager = new RSSManager(logger);
   storeManager = new StoreManager();
   
   const settings = storeManager.getSettings();
@@ -99,6 +110,10 @@ ipcMain.handle('remove-feed', (event, url) => {
 
 ipcMain.handle('get-settings', () => {
   return storeManager.getSettings();
+});
+
+ipcMain.handle('get-debug-mode', () => {
+  return isDebugMode;
 });
 
 ipcMain.handle('update-settings', (event, settings) => {
@@ -232,7 +247,7 @@ function createTray() {
     // アイコンファイルが存在しない場合は、トレイを作成しない
     const fs = require('fs');
     if (!fs.existsSync(iconPath)) {
-      console.log('Tray icon not found, skipping tray creation');
+      logger.debug('Tray icon not found, skipping tray creation');
       return;
     }
     

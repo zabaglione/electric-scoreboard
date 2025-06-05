@@ -1,7 +1,15 @@
 const { ipcRenderer } = require('electron');
 const { shell } = require('electron');
+const Logger = require('./src/logger');
 
-console.log('RSS ニュース電光掲示板 - レンダラープロセス起動');
+// ログ設定をメインプロセスから取得して初期化
+let logger;
+ipcRenderer.invoke('get-debug-mode').then(isDebug => {
+  logger = new Logger(isDebug);
+  if (isDebug) {
+    console.log('RSS ニュース電光掲示板 - レンダラープロセス起動');
+  }
+});
 
 const tickerContent = document.getElementById('ticker-content');
 const pauseBtn = document.getElementById('pause-btn');
@@ -62,7 +70,9 @@ function updateTicker(newsItems) {
 }
 
 ipcRenderer.on('news-update', (event, articles) => {
-    console.log(`受信したニュース記事数: ${articles.length}`);
+    if (logger) {
+        logger.debug(`受信したニュース記事数: ${articles.length}`);
+    }
     currentArticles = articles;
     updateTicker(articles);
 });
@@ -107,7 +117,9 @@ function calculateAndApplyScrollDuration(pixelsPerSecond) {
         // 時間 = 距離 / 速度
         const duration = totalDistance / pixelsPerSecond;
         
-        console.log(`スクロール計算: テキスト幅=${textWidth}px, 総距離=${totalDistance}px, 速度=${pixelsPerSecond}px/s, 時間=${duration}s`);
+        if (logger) {
+            logger.debug(`スクロール計算: テキスト幅=${textWidth}px, 総距離=${totalDistance}px, 速度=${pixelsPerSecond}px/s, 時間=${duration}s`);
+        }
         
         // CSSのアニメーション時間を更新
         document.documentElement.style.setProperty('--scroll-duration', `${duration}s`);
