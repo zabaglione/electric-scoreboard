@@ -1,0 +1,23 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm init:*)",
+      "Bash(npm install:*)",
+      "Bash(npm start)",
+      "Bash(mkdir:*)",
+      "Bash(ls:*)",
+      "Bash(npm test)",
+      "Bash(rm:*)",
+      "Bash(npm run test:integration:*)",
+      "Bash(timeout 5 npm start:*)",
+      "Bash(npm run test:*)",
+      "Bash(node test-rss-feeds.js)",
+      "Bash(timeout 10 npm start:*)",
+      "Bash(timeout 15 npm start)",
+      "Bash(git init:*)",
+      "Bash(git config:*)",
+      "Bash(git add:*)"
+    ],
+    "deny": []
+  }
+}

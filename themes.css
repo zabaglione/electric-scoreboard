@@ -1,0 +1,58 @@
+/* テーマプリセット */
+.theme-dark {
+    --bg-color: #000;
+    --text-color: #0ff;
+    --source-color: #ff0;
+}
+
+.theme-light {
+    --bg-color: #f0f0f0;
+    --text-color: #333;
+    --source-color: #666;
+}
+
+.theme-matrix {
+    --bg-color: #000;
+    --text-color: #00ff00;
+    --source-color: #00cc00;
+}
+
+.theme-retro {
+    --bg-color: #222;
+    --text-color: #ffaa00;
+    --source-color: #ff6600;
+}
+
+.theme-ocean {
+    --bg-color: #001a33;
+    --text-color: #66ccff;
+    --source-color: #0099ff;
+}
+
+.theme-sunset {
+    --bg-color: #1a0033;
+    --text-color: #ff6b9d;
+    --source-color: #ffd93d;
+}
+
+.theme-cyberpunk {
+    --bg-color: #0a0a0a;
+    --text-color: #ff00ff;
+    --source-color: #00ffff;
+}
+
+.theme-monochrome {
+    --bg-color: #000;
+    --text-color: #fff;
+    --source-color: #ccc;
+}
+
+/* テーマ適用時のトランジション */
+body {
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+#ticker-content,
+.source {
+    transition: color 0.3s ease;
+}

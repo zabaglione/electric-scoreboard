@@ -1,0 +1,122 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+:root {
+    --bg-color: #000;
+    --text-color: #0ff;
+    --source-color: #ff0;
+    --font-size: 48px;
+    --scroll-duration: 60s; /* 動的に計算される */
+}
+
+body {
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    font-family: 'Courier New', monospace;
+    overflow: hidden;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    user-select: none;
+}
+
+#ticker-container {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+}
+
+#ticker-content {
+    white-space: nowrap;
+    font-size: var(--font-size);
+    font-weight: bold;
+    animation: scroll-left var(--scroll-duration) linear infinite;
+    padding-left: 100%;
+    will-change: transform;
+}
+
+@keyframes scroll-left {
+    0% {
+        transform: translateX(0);
+    }
+    100% {
+        transform: translateX(-100%);
+    }
+}
+
+.news-item {
+    display: inline;
+    margin-right: 100px;
+    cursor: pointer;
+    transition: opacity 0.2s;
+}
+
+.news-item:hover {
+    opacity: 0.8;
+}
+
+.source {
+    color: var(--source-color);
+    font-size: 0.8em;
+    margin-left: 10px;
+}
+
+#controls {
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    display: flex;
+    gap: 10px;
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+body:hover #controls {
+    opacity: 1;
+}
+
+.control-btn {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid var(--text-color);
+    color: var(--text-color);
+    padding: 5px 10px;
+    cursor: pointer;
+    border-radius: 4px;
+    font-family: inherit;
+    font-size: 14px;
+    transition: all 0.2s;
+}
+
+.control-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: scale(1.05);
+}
+
+.control-btn:active {
+    transform: scale(0.95);
+}
+
+.paused #ticker-content {
+    animation-play-state: paused;
+}
+
+body.light-theme {
+    --bg-color: #f0f0f0;
+    --text-color: #333;
+    --source-color: #666;
+}
+
+body.light-theme .control-btn {
+    background: rgba(0, 0, 0, 0.1);
+    border-color: var(--text-color);
+}
+
+body.light-theme .control-btn:hover {
+    background: rgba(0, 0, 0, 0.2);
+}

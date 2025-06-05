@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>設定 - RSS ニュース電光掲示板</title>
+    <link rel="stylesheet" href="settings.css">
+</head>
+<body>
+    <div class="settings-container">
+        <h1>設定</h1>
+        
+        <div class="settings-section">
+            <h2>RSSフィード管理</h2>
+            <div class="feed-list" id="feed-list"></div>
+            
+            <div class="preset-feeds">
+                <h3>おすすめフィード</h3>
+                <div class="preset-grid">
+                    <button class="preset-btn" data-url="https://b.hatena.ne.jp/hotentry.rss" data-name="はてなブックマーク">はてなブックマーク</button>
+                    <button class="preset-btn" data-url="https://news.livedoor.com/topics/rss/top.xml" data-name="ライブドアニュース">ライブドアニュース</button>
+                    <button class="preset-btn" data-url="https://gigazine.net/news/rss_2.0/" data-name="GIGAZINE">GIGAZINE</button>
+                    <button class="preset-btn" data-url="https://www.lifehacker.jp/feed/index.xml" data-name="ライフハッカー">ライフハッカー</button>
+                    <button class="preset-btn" data-url="https://news.yahoo.co.jp/rss/categories/science.xml" data-name="Yahoo!科学">Yahoo!科学</button>
+                    <button class="preset-btn" data-url="https://news.yahoo.co.jp/rss/categories/domestic.xml" data-name="Yahoo!国内">Yahoo!国内</button>
+                    <button class="preset-btn" data-url="https://news.yahoo.co.jp/rss/categories/world.xml" data-name="Yahoo!国際">Yahoo!国際</button>
+                    <button class="preset-btn" data-url="https://news.yahoo.co.jp/rss/categories/it.xml" data-name="Yahoo!IT">Yahoo!IT</button>
+                    <button class="preset-btn" data-url="http://www.asahi.com/rss/asahi/newsheadlines.rdf" data-name="朝日新聞">朝日新聞</button>
+                    <button class="preset-btn" data-url="https://rss.itmedia.co.jp/rss/2.0/itmedia_all.xml" data-name="ITmedia全記事">ITmedia全記事</button>
+                    <button class="preset-btn" data-url="https://rss.itmedia.co.jp/rss/2.0/news_bursts.xml" data-name="ITmediaニュース">ITmediaニュース</button>
+                    <button class="preset-btn" data-url="https://rss.itmedia.co.jp/rss/2.0/pcuser.xml" data-name="ITmedia PC USER">ITmedia PC USER</button>
+                    <button class="preset-btn" data-url="http://kaigainohannoublog.blog55.fc2.com/?xml" data-name="海外の反応ブログ">海外の反応ブログ</button>
+                    <button class="preset-btn" data-url="http://blog.livedoor.jp/zzcj/index.rdf" data-name="海外反応ZZCJ">海外反応ZZCJ</button>
+                    <button class="preset-btn" data-url="https://www.st.ryukoku.ac.jp/~kjm/security/memo/memop.rdf" data-name="セキュリティメモ">セキュリティメモ</button>
+                    <button class="preset-btn" data-url="https://softantenna.com/blog/feed/" data-name="ソフトアンテナ">ソフトアンテナ</button>
+                </div>
+            </div>
+            
+            <div class="add-feed">
+                <h3>カスタムフィード追加</h3>
+                <input type="text" id="feed-url" placeholder="RSS フィード URL">
+                <input type="text" id="feed-name" placeholder="フィード名">
+                <button id="add-feed-btn">追加</button>
+            </div>
+        </div>
+
+        <div class="settings-section">
+            <h2>表示設定</h2>
+            <div class="setting-item">
+                <label for="theme">テーマ:</label>
+                <select id="theme">
+                    <option value="dark">ダーク</option>
+                    <option value="light">ライト</option>
+                    <option value="matrix">マトリックス</option>
+                    <option value="retro">レトロ</option>
+                    <option value="ocean">オーシャン</option>
+                    <option value="sunset">サンセット</option>
+                    <option value="cyberpunk">サイバーパンク</option>
+                    <option value="monochrome">モノクローム</option>
+                    <option value="custom">カスタム</option>
+                </select>
+            </div>
+            
+            <div class="setting-item">
+                <label for="font-size">文字サイズ:</label>
+                <input type="range" id="font-size" min="24" max="72" step="4">
+                <span id="font-size-value">48</span>px
+            </div>
+            
+            <div class="setting-item">
+                <label for="scroll-speed">スクロール速度:</label>
+                <input type="range" id="scroll-speed" min="10" max="200" step="5">
+                <span id="scroll-speed-value">50</span>px/秒
+            </div>
+            
+            <div class="setting-item">
+                <label for="update-interval">更新間隔:</label>
+                <select id="update-interval">
+                    <option value="60000">1分</option>
+                    <option value="300000">5分</option>
+                    <option value="600000">10分</option>
+                    <option value="1800000">30分</option>
+                    <option value="3600000">1時間</option>
+                </select>
+            </div>
+            
+            <div class="setting-item">
+                <label for="max-articles">最大記事数:</label>
+                <input type="number" id="max-articles" min="5" max="50" step="5">
+            </div>
+        </div>
+
+        <div class="settings-section">
+            <h2>カスタマイズ</h2>
+            <div class="setting-item">
+                <label for="text-color">テキスト色:</label>
+                <input type="color" id="text-color">
+                <input type="text" id="text-color-hex" class="color-hex" placeholder="#0ff">
+            </div>
+            
+            <div class="setting-item">
+                <label for="background-color">背景色:</label>
+                <input type="color" id="background-color">
+                <input type="text" id="background-color-hex" class="color-hex" placeholder="#000">
+            </div>
+            
+            <div class="setting-item">
+                <label for="source-color">ソース色:</label>
+                <input type="color" id="source-color">
+                <input type="text" id="source-color-hex" class="color-hex" placeholder="#ff0">
+            </div>
+            
+            <div class="setting-item">
+                <label for="font-family">フォント:</label>
+                <select id="font-family">
+                    <option value="Courier New">Courier New</option>
+                    <option value="Hiragino Kaku Gothic Pro">ヒラギノ角ゴ Pro</option>
+                    <option value="Yu Gothic">游ゴシック</option>
+                    <option value="Meiryo">メイリオ</option>
+                    <option value="MS Gothic">ＭＳ ゴシック</option>
+                    <option value="monospace">等幅フォント</option>
+                </select>
+            </div>
+            
+            <div class="setting-item">
+                <label for="window-width">ウィンドウ幅:</label>
+                <input type="number" id="window-width" min="600" max="2400" step="50">
+                <span>px</span>
+            </div>
+            
+            <div class="setting-item">
+                <label for="window-height">ウィンドウ高さ:</label>
+                <input type="number" id="window-height" min="100" max="400" step="10">
+                <span>px</span>
+            </div>
+            
+            <div class="setting-item">
+                <label for="always-on-top">常に最前面に表示:</label>
+                <input type="checkbox" id="always-on-top">
+            </div>
+        </div>
+
+        <div class="settings-actions">
+            <button id="save-settings">保存</button>
+            <button id="cancel-settings">キャンセル</button>
+            <button id="reset-settings">初期値に戻す</button>
+        </div>
+    </div>
+    
+    <script src="settings.js"></script>
+</body>
+</html>
