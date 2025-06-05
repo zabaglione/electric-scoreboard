@@ -39,6 +39,8 @@ body {
     animation: scroll-left var(--scroll-duration) linear infinite;
     padding-left: 100%;
     will-change: transform;
+    transform: translateZ(0);
+    backface-visibility: hidden;
 }
 
 @keyframes scroll-left {
@@ -52,7 +54,7 @@ body {
 
 .news-item {
     display: inline;
-    margin-right: 100px;
+    margin-right: 200px;
     cursor: pointer;
     transition: opacity 0.2s;
 }

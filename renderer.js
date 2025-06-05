@@ -50,22 +50,6 @@ function updateTicker(newsItems) {
         }
         tickerContent.appendChild(newsElement);
     });
-
-    const duplicateItems = [...newsItems];
-    duplicateItems.forEach(item => {
-        const newsElement = document.createElement('span');
-        newsElement.className = 'news-item';
-        newsElement.innerHTML = `
-            ${item.title}
-            <span class="source">[${item.source}]</span>
-        `;
-        if (item.link) {
-            newsElement.addEventListener('click', () => {
-                shell.openExternal(item.link);
-            });
-        }
-        tickerContent.appendChild(newsElement);
-    });
     
     // テキストが変更されたのでスクロール速度を再計算
     if (currentSettings) {
