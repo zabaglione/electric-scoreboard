@@ -2,6 +2,7 @@ const { app, BrowserWindow, ipcMain, Menu, shell, globalShortcut, Tray } = requi
 const path = require('path');
 const RSSManager = require('./src/rss-manager');
 const StoreManager = require('./src/store-manager');
+const AutostartManager = require('./src/autostart-manager');
 const Logger = require('./src/logger');
 
 // コマンドライン引数または環境変数からデバッグモードを判定
@@ -10,6 +11,9 @@ const isDebugMode = process.argv.includes('--debug') ||
                    process.env.NODE_ENV === 'development' || 
                    process.env.DEBUG_MODE === 'true';
 
+// 自動起動経由での起動かどうかを検出
+const isLaunchedViaAutostart = detectAutostartLaunch();
+
 // ロガーを初期化（デフォルトはoff）
 const logger = new Logger(isDebugMode);
 
@@ -17,23 +21,83 @@ if (isDebugMode) {
   console.log('デバッグモードで起動しました');
 }
 
+if (isLaunchedViaAutostart) {
+  logger.debug('アプリケーションが自動起動経由で起動されました');
+}
+
 let mainWindow;
 let settingsWindow;
 let rssManager;
 let storeManager;
+let autostartManager;
 let updateInterval;
 let tray = null;
+
+/**
+ * 自動起動経由での起動かどうかを検出
+ * Detect if the application was launched via autostart
+ * @returns {boolean} True if launched via autostart
+ */
+function detectAutostartLaunch() {
+  // macOS: openAsHidden フラグまたは起動時の引数を確認
+  if (process.platform === 'darwin') {
+    const loginItemSettings = app.getLoginItemSettings();
+    return loginItemSettings.wasOpenedAsHidden || process.argv.includes('--hidden');
+  }
+  
+  // Windows: 起動時の引数や環境変数を確認
+  if (process.platform === 'win32') {
+    return process.argv.includes('--autostart') || 
+           process.argv.includes('--hidden') ||
+           process.env.AUTOSTART_LAUNCH === 'true';
+  }
+  
+  // Linux: 起動時の引数を確認
+  if (process.platform === 'linux') {
+    return process.argv.includes('--autostart') || process.argv.includes('--hidden');
+  }
+  
+  return false;
+}
+
+/**
+ * 自動起動時の特別な動作を処理
+ * Handle special behavior when launched via autostart
+ */
+function handleAutostartBehavior() {
+  logger.debug('自動起動時の動作を設定中...');
+  
+  // システムトレイが利用可能な場合、ウィンドウを非表示にしてトレイに最小化
+  if (tray) {
+    logger.debug('システムトレイに最小化します');
+    mainWindow.hide();
+  } else {
+    // システムトレイが利用できない場合は最小化状態で表示
+    logger.debug('ウィンドウを最小化状態で表示します');
+    mainWindow.minimize();
+  }
+  
+  // 自動起動時は常に最前面表示を無効にする（邪魔にならないように）
+  mainWindow.setAlwaysOnTop(false);
+  
+  logger.debug('自動起動時の動作設定が完了しました');
+}
 
 function createWindow() {
   rssManager = new RSSManager(logger);
   storeManager = new StoreManager();
+  autostartManager = new AutostartManager(logger);
   
   const settings = storeManager.getSettings();
+  
+  // 自動起動時は非表示で開始するかどうかを決定
+  const showWindow = !isLaunchedViaAutostart;
   
   mainWindow = new BrowserWindow({
     width: settings.windowWidth || 1200,
     height: settings.windowHeight || 150,
     alwaysOnTop: settings.alwaysOnTop || false,
+    show: showWindow, // 自動起動時は非表示で開始
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: false
@@ -59,6 +123,11 @@ function createWindow() {
   createContextMenu();
   registerShortcuts();
   createTray();
+  
+  // 自動起動時の特別な処理（トレイ作成後に実行）
+  if (isLaunchedViaAutostart) {
+    handleAutostartBehavior();
+  }
 }
 
 app.whenReady().then(createWindow);
@@ -119,6 +188,10 @@ ipcMain.handle('get-debug-mode', () => {
   return isDebugMode;
 });
 
+ipcMain.handle('get-autostart-launch-status', () => {
+  return isLaunchedViaAutostart;
+});
+
 ipcMain.handle('update-settings', (event, settings) => {
   const updated = storeManager.updateSettings(settings);
   
@@ -140,6 +213,41 @@ ipcMain.handle('update-settings', (event, settings) => {
   mainWindow.webContents.send('settings-updated');
   
   return updated;
+});
+
+// 自動起動関連のIPCハンドラー
+ipcMain.handle('get-autostart-status', async () => {
+  try {
+    return await autostartManager.isEnabled();
+  } catch (error) {
+    logger.error('Failed to get autostart status:', error);
+    throw new Error(`自動起動状態の取得に失敗しました: ${error.message}`);
+  }
+});
+
+ipcMain.handle('set-autostart', async (event, enabled) => {
+  try {
+    if (enabled) {
+      await autostartManager.enable();
+      logger.debug('Autostart enabled via settings');
+    } else {
+      await autostartManager.disable();
+      logger.debug('Autostart disabled via settings');
+    }
+    return true;
+  } catch (error) {
+    logger.error('Failed to set autostart:', error);
+    
+    // プラットフォーム固有のエラーメッセージを提供
+    let errorMessage = error.message;
+    if (error.message.includes('Unsupported platform')) {
+      errorMessage = 'このプラットフォームでは自動起動機能はサポートされていません';
+    } else if (error.message.includes('permission') || error.message.includes('Permission')) {
+      errorMessage = '自動起動の設定に必要な権限がありません';
+    }
+    
+    throw new Error(errorMessage);
+  }
 });
 
 function createSettingsWindow() {

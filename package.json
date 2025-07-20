@@ -1,8 +1,16 @@
 {
-  "name": "electric-scoreboard",
+  "name": "rss-news-ticker",
   "version": "1.0.0",
   "description": "RSS ニュース電光掲示板アプリ - RSSフィードから取得したニュースを横スクロール表示するデスクトップアプリケーション",
   "main": "main.js",
+  "homepage": "https://github.com/your-username/rss-news-ticker",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/your-username/rss-news-ticker.git"
+  },
+  "bugs": {
+    "url": "https://github.com/your-username/rss-news-ticker/issues"
+  },
   "scripts": {
     "start": "electron .",
     "dev": "NODE_ENV=development electron . --enable-logging",
@@ -12,21 +20,39 @@
     "test:coverage": "jest --coverage",
     "test:integration": "playwright test",
     "test:integration:ui": "playwright test --ui",
-    "test:all": "npm test && npm run test:integration"
+    "test:all": "npm test && npm run test:integration",
+    "build": "electron-builder",
+    "build:mac": "electron-builder --mac",
+    "build:win": "electron-builder --win",
+    "build:linux": "electron-builder --linux",
+    "build:all": "electron-builder --mac --win --linux",
+    "dist": "npm run build",
+    "dist:mac": "npm run build:mac",
+    "dist:win": "npm run build:win",
+    "dist:linux": "npm run build:linux",
+    "pack": "electron-builder --dir",
+    "postinstall": "electron-builder install-app-deps"
   },
   "keywords": [
     "electron",
     "rss",
     "news",
     "ticker",
-    "desktop"
+    "desktop",
+    "scoreboard",
+    "japanese",
+    "feed-reader"
   ],
-  "author": "",
+  "author": {
+    "name": "RSS News Ticker Developer",
+    "email": "developer@example.com"
+  },
   "license": "MIT",
   "devDependencies": {
     "@playwright/test": "^1.52.0",
     "@types/jest": "^29.5.14",
     "electron": "^36.4.0",
+    "electron-builder": "^26.0.12",
     "jest": "^29.7.0",
     "jest-environment-jsdom": "^30.0.0-beta.3",
     "playwright": "^1.52.0"

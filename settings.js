@@ -8,7 +8,7 @@ async function loadCurrentSettings() {
     currentFeeds = await ipcRenderer.invoke('get-feeds');
     
     displayFeeds();
-    displaySettings();
+    await displaySettings();
 }
 
 function displayFeeds() {
@@ -54,7 +54,7 @@ function updatePresetButtons() {
     });
 }
 
-function displaySettings() {
+async function displaySettings() {
     document.getElementById('theme').value = currentSettings.theme;
     document.getElementById('font-size').value = currentSettings.fontSize;
     document.getElementById('font-size-value').textContent = currentSettings.fontSize;
@@ -74,6 +74,15 @@ function displaySettings() {
     document.getElementById('window-width').value = currentSettings.windowWidth;
     document.getElementById('window-height').value = currentSettings.windowHeight;
     document.getElementById('always-on-top').checked = currentSettings.alwaysOnTop;
+    
+    // 自動起動設定を取得して表示
+    try {
+        const autostartEnabled = await ipcRenderer.invoke('get-autostart-status');
+        document.getElementById('autostart').checked = autostartEnabled;
+    } catch (error) {
+        console.error('自動起動状態の取得に失敗しました:', error);
+        document.getElementById('autostart').checked = false;
+    }
 }
 
 async function addFeed() {
@@ -120,6 +129,16 @@ async function saveSettings() {
         alwaysOnTop: document.getElementById('always-on-top').checked
     };
     
+    // 自動起動設定を保存
+    const autostartEnabled = document.getElementById('autostart').checked;
+    try {
+        await ipcRenderer.invoke('set-autostart', autostartEnabled);
+    } catch (error) {
+        console.error('自動起動設定の保存に失敗しました:', error);
+        alert(`自動起動の設定に失敗しました: ${error.message}`);
+        return; // エラーの場合は設定保存を中断
+    }
+    
     await ipcRenderer.invoke('update-settings', newSettings);
     window.close();
 }
@@ -155,6 +174,38 @@ document.getElementById('font-size').addEventListener('input', (e) => {
 
 document.getElementById('scroll-speed').addEventListener('input', (e) => {
     document.getElementById('scroll-speed-value').textContent = e.target.value;
+});
+
+// 自動起動チェックボックスのイベントリスナー
+document.getElementById('autostart').addEventListener('change', async (e) => {
+    const checkbox = e.target;
+    const originalState = !checkbox.checked;
+    
+    try {
+        // 即座に設定を適用
+        await ipcRenderer.invoke('set-autostart', checkbox.checked);
+        
+        // 成功メッセージを表示
+        const message = checkbox.checked ? 
+            '自動起動が有効になりました' : 
+            '自動起動が無効になりました';
+        
+        // 一時的にフィードバックを表示（簡易実装）
+        const originalText = checkbox.parentElement.querySelector('label').textContent;
+        checkbox.parentElement.querySelector('label').textContent = `${originalText} ✓`;
+        setTimeout(() => {
+            checkbox.parentElement.querySelector('label').textContent = originalText;
+        }, 2000);
+        
+    } catch (error) {
+        console.error('自動起動設定の変更に失敗しました:', error);
+        
+        // エラー時は元の状態に戻す
+        checkbox.checked = originalState;
+        
+        // エラーメッセージを表示
+        alert(`自動起動の設定に失敗しました: ${error.message}`);
+    }
 });
 
 document.getElementById('feed-url').addEventListener('keypress', (e) => {

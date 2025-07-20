@@ -4,7 +4,9 @@ module.exports = {
     getVersion: jest.fn(() => '1.0.0'),
     getPath: jest.fn(() => '/mock/path'),
     quit: jest.fn(),
-    whenReady: jest.fn(() => Promise.resolve())
+    whenReady: jest.fn(() => Promise.resolve()),
+    getLoginItemSettings: jest.fn(() => ({ openAtLogin: false })),
+    setLoginItemSettings: jest.fn()
   },
   BrowserWindow: jest.fn().mockImplementation(() => ({
     loadFile: jest.fn(),
