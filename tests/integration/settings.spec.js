@@ -211,4 +211,42 @@ test.describe('設定機能テスト', () => {
     
     expect(savedInterval).toBe(600000);
   });
+
+  test('正常系: 自動起動設定を変更できる', async () => {
+    // 自動起動チェックボックスを確認
+    const autostartCheckbox = await settingsWindow.locator('#autostart-enabled');
+    await expect(autostartCheckbox).toBeVisible();
+    
+    // 初期状態を取得
+    const initialChecked = await autostartCheckbox.isChecked();
+    
+    // チェックボックスをトグル
+    await autostartCheckbox.click();
+    
+    // 状態が変更されたことを確認
+    const newChecked = await autostartCheckbox.isChecked();
+    expect(newChecked).toBe(!initialChecked);
+    
+    // 保存ボタンをクリック
+    const saveButton = await settingsWindow.locator('#save-settings');
+    await saveButton.click();
+    
+    // 設定ウィンドウが閉じるのを待つ
+    await settingsWindow.waitForEvent('close');
+    
+    // 設定を再度開いて状態が保持されていることを確認
+    await window.hover('body');
+    const controls = await window.locator('#controls');
+    await controls.waitFor({ state: 'visible', timeout: 5000 });
+    
+    const settingsBtn = await window.locator('#settings-btn');
+    await settingsBtn.click();
+    
+    settingsWindow = await electronApp.waitForEvent('window');
+    await settingsWindow.waitForLoadState('domcontentloaded');
+    
+    const savedAutostartCheckbox = await settingsWindow.locator('#autostart-enabled');
+    const savedChecked = await savedAutostartCheckbox.isChecked();
+    expect(savedChecked).toBe(newChecked);
+  });
 });

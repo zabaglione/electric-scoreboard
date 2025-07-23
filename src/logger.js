@@ -69,6 +69,70 @@ class Logger {
         }
     }
 
+    info(...args) {
+        if (this.enabled) {
+            this.originalConsole.info('[INFO]', ...args);
+        }
+    }
+
+    warn(...args) {
+        if (this.enabled) {
+            this.originalConsole.warn('[WARN]', ...args);
+        }
+    }
+
+    error(...args) {
+        // エラーは常に出力
+        this.originalConsole.error('[ERROR]', ...args);
+    }
+
+    // 構造化ログメソッド
+    logError(message, error, context = {}) {
+        const errorInfo = {
+            message: message,
+            error: {
+                name: error.name,
+                message: error.message,
+                stack: error.stack
+            },
+            context: context,
+            timestamp: new Date().toISOString()
+        };
+
+        if (error.code) {
+            errorInfo.error.code = error.code;
+        }
+
+        if (error.details) {
+            errorInfo.error.details = error.details;
+        }
+
+        this.originalConsole.error('[ERROR]', JSON.stringify(errorInfo, null, 2));
+    }
+
+    logWarning(message, context = {}) {
+        const warningInfo = {
+            message: message,
+            context: context,
+            timestamp: new Date().toISOString()
+        };
+
+        if (this.enabled) {
+            this.originalConsole.warn('[WARN]', JSON.stringify(warningInfo, null, 2));
+        }
+    }
+
+    logDebug(message, context = {}) {
+        if (this.enabled) {
+            const debugInfo = {
+                message: message,
+                context: context,
+                timestamp: new Date().toISOString()
+            };
+            this.originalConsole.log('[DEBUG]', JSON.stringify(debugInfo, null, 2));
+        }
+    }
+
     // コンソールを元に戻す
     restore() {
         console.log = this.originalConsole.log;

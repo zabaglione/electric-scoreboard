@@ -218,35 +218,142 @@ ipcMain.handle('update-settings', (event, settings) => {
 // 自動起動関連のIPCハンドラー
 ipcMain.handle('get-autostart-status', async () => {
   try {
-    return await autostartManager.isEnabled();
+    const status = await autostartManager.isEnabled();
+    logger.debug(`Autostart status retrieved: ${status}`);
+    return status;
   } catch (error) {
     logger.error('Failed to get autostart status:', error);
+    
+    // AutostartErrorの場合はユーザーフレンドリーなメッセージを使用
+    if (error.name === 'AutostartError') {
+      logger.error('AutostartError details:', error.getDetailedMessage());
+      throw new Error(error.getUserMessage());
+    }
+    
+    // 一般的なエラーの場合
     throw new Error(`自動起動状態の取得に失敗しました: ${error.message}`);
   }
 });
 
 ipcMain.handle('set-autostart', async (event, enabled) => {
   try {
+    logger.debug(`自動起動設定を変更します: ${enabled ? '有効' : '無効'}`);
+    
     if (enabled) {
       await autostartManager.enable();
-      logger.debug('Autostart enabled via settings');
+      logger.debug('自動起動が有効になりました');
     } else {
       await autostartManager.disable();
-      logger.debug('Autostart disabled via settings');
+      logger.debug('自動起動が無効になりました');
     }
-    return true;
-  } catch (error) {
-    logger.error('Failed to set autostart:', error);
     
-    // プラットフォーム固有のエラーメッセージを提供
+    // 設定後に最後のエラーをチェック（警告レベルのエラーがある場合）
+    const lastError = autostartManager.getLastError();
+    if (lastError) {
+      if (lastError.code === 'VERIFICATION_FAILED') {
+        logger.warn('自動起動設定は完了しましたが、検証に失敗しました:', lastError.getDetailedMessage());
+        // 検証失敗は警告レベルなので成功として扱う
+      } else if (lastError.isRecoverable()) {
+        logger.warn('自動起動設定中に回復可能なエラーが発生しました:', lastError.getDetailedMessage());
+        // 回復可能なエラーも成功として扱う
+      } else {
+        logger.error('自動起動設定中に重大なエラーが発生しました:', lastError.getDetailedMessage());
+      }
+    }
+    
+    return {
+      success: true,
+      warning: lastError && (lastError.code === 'VERIFICATION_FAILED' || lastError.isRecoverable()) ? lastError.getUserMessage() : null
+    };
+    
+  } catch (error) {
+    logger.logError('自動起動設定の変更に失敗しました', error, {
+      operation: enabled ? 'enable' : 'disable',
+      platform: autostartManager.platform
+    });
+    
+    // AutostartErrorの場合は詳細な情報を活用
+    if (error.name === 'AutostartError') {
+      logger.logError('AutostartError詳細情報', error, {
+        code: error.code,
+        recoverable: error.isRecoverable(),
+        userActionRequired: error.requiresUserAction(),
+        details: error.details
+      });
+      
+      // 包括的なエラーレポートを生成
+      try {
+        const errorReport = await autostartManager.generateErrorReport(error);
+        logger.logDebug('包括的なエラーレポートを生成しました', {
+          errorCode: error.code,
+          hasRecovery: !!errorReport.recovery,
+          hasGuidance: !!errorReport.guidance,
+          recoverable: errorReport.error.recoverable
+        });
+        
+        if (errorReport.recovery && errorReport.recovery.success) {
+          logger.debug('エラー回復が成功しました');
+          return {
+            success: true,
+            recovered: true,
+            message: 'エラーが発生しましたが、自動的に回復しました',
+            recoveryInfo: errorReport.recovery,
+            errorReport: errorReport
+          };
+        } else if (errorReport.recovery && errorReport.recovery.fallbackAvailable) {
+          logger.debug('フォールバック情報を提供します');
+          throw new Error(`${error.getUserMessage()}\n\n回復方法: ${JSON.stringify(errorReport.recovery.message, null, 2)}`);
+        } else if (errorReport.guidance) {
+          logger.debug('ユーザーガイダンスを提供します');
+          throw new Error(`${error.getUserMessage()}\n\n対処方法: ${JSON.stringify(errorReport.guidance, null, 2)}`);
+        }
+      } catch (reportError) {
+        logger.logError('エラーレポートの生成中にエラーが発生しました', reportError);
+      }
+      
+      throw new Error(error.getUserMessage());
+    }
+    
+    // 一般的なエラーの場合はフォールバック処理を維持
     let errorMessage = error.message;
+    
     if (error.message.includes('Unsupported platform')) {
       errorMessage = 'このプラットフォームでは自動起動機能はサポートされていません';
     } else if (error.message.includes('permission') || error.message.includes('Permission')) {
-      errorMessage = '自動起動の設定に必要な権限がありません';
+      errorMessage = '自動起動の設定に必要な権限がありません。管理者権限で実行するか、システム設定を確認してください。';
+    } else if (error.message.includes('access') || error.message.includes('Access')) {
+      errorMessage = 'システムの自動起動設定にアクセスできません。セキュリティソフトの設定を確認してください。';
+    } else {
+      errorMessage = `自動起動の設定中にエラーが発生しました: ${error.message}`;
     }
     
     throw new Error(errorMessage);
+  }
+});
+
+// 自動起動のプラットフォームサポート状況を確認するハンドラー
+ipcMain.handle('check-autostart-support', async () => {
+  try {
+    const isSupported = await autostartManager.isPlatformSupported();
+    const platformMethod = isSupported ? autostartManager.getPlatformMethod() : null;
+    
+    logger.debug(`Autostart support check: supported=${isSupported}, method=${platformMethod}`);
+    
+    return {
+      supported: isSupported,
+      platform: autostartManager.platform,
+      method: platformMethod,
+      error: isSupported ? null : autostartManager.getLastError()
+    };
+  } catch (error) {
+    logger.error('Failed to check autostart support:', error);
+    
+    return {
+      supported: false,
+      platform: autostartManager.platform,
+      method: null,
+      error: error.name === 'AutostartError' ? error.getUserMessage() : error.message
+    };
   }
 });
 

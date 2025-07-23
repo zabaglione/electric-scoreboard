@@ -76,12 +76,48 @@ async function displaySettings() {
     document.getElementById('always-on-top').checked = currentSettings.alwaysOnTop;
     
     // 自動起動設定を取得して表示
+    await displayAutostartSettings();
+}
+
+async function displayAutostartSettings() {
+    const autostartCheckbox = document.getElementById('autostart');
+    const autostartLabel = autostartCheckbox.parentElement.querySelector('label');
+    const originalLabelText = autostartLabel.textContent;
+    
     try {
+        // プラットフォームサポート状況を確認
+        const supportInfo = await ipcRenderer.invoke('check-autostart-support');
+        
+        if (!supportInfo.supported) {
+            // サポートされていない場合
+            autostartCheckbox.disabled = true;
+            autostartCheckbox.checked = false;
+            autostartLabel.textContent = `${originalLabelText} (このプラットフォームではサポートされていません)`;
+            autostartLabel.style.color = '#888';
+            
+            console.warn('Autostart not supported:', supportInfo.error);
+            return;
+        }
+        
+        // サポートされている場合は現在の状態を取得
         const autostartEnabled = await ipcRenderer.invoke('get-autostart-status');
-        document.getElementById('autostart').checked = autostartEnabled;
+        autostartCheckbox.checked = autostartEnabled;
+        autostartCheckbox.disabled = false;
+        autostartLabel.style.color = '';
+        
+        console.log(`Autostart status loaded: ${autostartEnabled} (method: ${supportInfo.method})`);
+        
     } catch (error) {
-        console.error('自動起動状態の取得に失敗しました:', error);
-        document.getElementById('autostart').checked = false;
+        console.error('自動起動設定の表示に失敗しました:', error);
+        
+        // エラーの場合はチェックボックスを無効化
+        autostartCheckbox.disabled = true;
+        autostartCheckbox.checked = false;
+        autostartLabel.textContent = `${originalLabelText} (設定の読み込みに失敗)`;
+        autostartLabel.style.color = '#f44';
+        
+        // エラーの詳細をツールチップとして表示（簡易実装）
+        autostartCheckbox.title = `エラー: ${error.message}`;
     }
 }
 
@@ -180,22 +216,60 @@ document.getElementById('scroll-speed').addEventListener('input', (e) => {
 document.getElementById('autostart').addEventListener('change', async (e) => {
     const checkbox = e.target;
     const originalState = !checkbox.checked;
+    const label = checkbox.parentElement.querySelector('label');
+    const originalText = label.textContent;
+    
+    // 処理中の表示
+    checkbox.disabled = true;
+    label.textContent = `${originalText} (設定中...)`;
+    label.style.color = '#888';
     
     try {
-        // 即座に設定を適用
-        await ipcRenderer.invoke('set-autostart', checkbox.checked);
+        // 設定を適用
+        const result = await ipcRenderer.invoke('set-autostart', checkbox.checked);
         
-        // 成功メッセージを表示
-        const message = checkbox.checked ? 
-            '自動起動が有効になりました' : 
-            '自動起動が無効になりました';
-        
-        // 一時的にフィードバックを表示（簡易実装）
-        const originalText = checkbox.parentElement.querySelector('label').textContent;
-        checkbox.parentElement.querySelector('label').textContent = `${originalText} ✓`;
-        setTimeout(() => {
-            checkbox.parentElement.querySelector('label').textContent = originalText;
-        }, 2000);
+        // 結果に応じてメッセージを表示
+        if (result.success) {
+            const baseMessage = checkbox.checked ? 
+                '自動起動が有効になりました' : 
+                '自動起動が無効になりました';
+            
+            console.log(baseMessage);
+            
+            // 警告がある場合は表示
+            if (result.warning) {
+                console.warn('警告:', result.warning);
+                label.textContent = `${originalText} ⚠`;
+                label.style.color = '#ff9800';
+                label.title = `設定は完了しましたが、警告があります: ${result.warning}`;
+                
+                setTimeout(() => {
+                    label.textContent = originalText;
+                    label.style.color = '';
+                    label.title = '';
+                }, 4000);
+            } else if (result.recovered) {
+                console.log('回復:', result.message);
+                label.textContent = `${originalText} ↻`;
+                label.style.color = '#4caf50';
+                label.title = result.message;
+                
+                setTimeout(() => {
+                    label.textContent = originalText;
+                    label.style.color = '';
+                    label.title = '';
+                }, 3000);
+            } else {
+                // 通常の成功
+                label.textContent = `${originalText} ✓`;
+                label.style.color = '#4caf50';
+                
+                setTimeout(() => {
+                    label.textContent = originalText;
+                    label.style.color = '';
+                }, 2000);
+            }
+        }
         
     } catch (error) {
         console.error('自動起動設定の変更に失敗しました:', error);
@@ -203,8 +277,72 @@ document.getElementById('autostart').addEventListener('change', async (e) => {
         // エラー時は元の状態に戻す
         checkbox.checked = originalState;
         
+        // エラーメッセージの解析と表示
+        let userMessage = error.message;
+        let isDetailedError = false;
+        
+        // JSON形式のエラー情報が含まれているかチェック
+        try {
+            if (error.message.includes('回復方法:')) {
+                const parts = error.message.split('回復方法:');
+                userMessage = parts[0].trim();
+                const recoveryInfo = JSON.parse(parts[1].trim());
+                isDetailedError = true;
+                
+                // 詳細なエラー情報を表示
+                console.log('回復情報:', recoveryInfo);
+                
+                // 回復方法がある場合は詳細なダイアログを表示
+                if (recoveryInfo.solutions) {
+                    let detailedMessage = `${userMessage}\n\n解決方法:\n`;
+                    recoveryInfo.solutions.forEach((solution, index) => {
+                        detailedMessage += `${solution.step}. ${solution.title}\n   ${solution.description}\n`;
+                        if (solution.command) {
+                            detailedMessage += `   コマンド: ${solution.command}\n`;
+                        }
+                        detailedMessage += '\n';
+                    });
+                    
+                    if (recoveryInfo.additionalInfo) {
+                        detailedMessage += `追加情報: ${recoveryInfo.additionalInfo}`;
+                    }
+                    
+                    userMessage = detailedMessage;
+                }
+            }
+        } catch (parseError) {
+            // JSON解析に失敗した場合は元のメッセージを使用
+            console.warn('エラーメッセージの解析に失敗しました:', parseError);
+        }
+        
+        // エラーの種類に応じた追加メッセージ
+        if (!isDetailedError) {
+            if (error.message.includes('サポートされていません')) {
+                userMessage += '\n\nお使いのオペレーティングシステムでは自動起動機能を利用できません。手動でシステムの自動起動設定を行ってください。';
+            } else if (error.message.includes('権限')) {
+                userMessage += '\n\n解決方法:\n• アプリケーションを管理者権限で実行してください\n• システムのセキュリティ設定を確認してください\n• ウイルス対策ソフトの設定を確認してください';
+            } else if (error.message.includes('アクセス')) {
+                userMessage += '\n\n解決方法:\n• システムの自動起動設定へのアクセス権限を確認してください\n• セキュリティソフトがブロックしていないか確認してください\n• システムを再起動してから再度お試しください';
+            }
+        }
+        
         // エラーメッセージを表示
-        alert(`自動起動の設定に失敗しました: ${error.message}`);
+        alert(`自動起動の設定に失敗しました:\n\n${userMessage}`);
+        
+        // エラーフィードバックを表示
+        label.textContent = `${originalText} ✗`;
+        label.style.color = '#f44336';
+        label.title = `エラー: ${error.message}`;
+        
+        setTimeout(() => {
+            label.textContent = originalText;
+            label.style.color = '';
+            label.title = '';
+        }, 4000);
+        
+    } finally {
+        // 処理完了後にチェックボックスを再有効化
+        checkbox.disabled = false;
     }
 });
 

@@ -28,21 +28,21 @@
   - Add system tray minimization when started via autostart
   - _Requirements: 2.4, 2.5_
 
-- [-] 5. Implement platform-specific autostart methods
+- [x] 5. Implement platform-specific autostart methods
   - Add macOS Login Items implementation using app.setLoginItemSettings()
   - Add Windows Registry implementation using app.setLoginItemSettings()
   - Add Linux .desktop file creation for ~/.config/autostart/ directory
   - Test platform-specific implementations with proper error handling
   - _Requirements: 3.1, 3.2, 3.3_
 
-- [ ] 6. Add comprehensive error handling and logging
+- [x] 6. Add comprehensive error handling and logging
   - Implement error handling for permission denied scenarios
   - Add fallback behavior for unsupported platforms
   - Integrate with existing logger.js for debug output
   - Create user-friendly error messages in Japanese
   - _Requirements: 3.4_
 
-- [ ] 7. Create unit tests for autostart functionality
+- [x] 7. Create unit tests for autostart functionality
   - Write tests/unit/autostart.test.js for AutostartManager methods
   - Test platform detection and method selection logic
   - Test enable/disable operations with mocked system calls
