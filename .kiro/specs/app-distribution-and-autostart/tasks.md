@@ -49,35 +49,35 @@
   - Test error handling scenarios and edge cases
   - _Requirements: 2.2, 2.3, 3.5_
 
-- [ ] 8. Create integration tests for autostart UI
+- [x] 8. Create integration tests for autostart UI
   - Write tests/integration/autostart.spec.js for end-to-end autostart functionality
   - Test settings UI checkbox interactions
   - Test IPC communication between processes
   - Test error handling and user feedback flows
   - _Requirements: 2.1, 2.6, 3.4_
 
-- [ ] 9. Configure build process for distribution
+- [x] 9. Configure build process for distribution
   - Set up platform-specific build configurations in electron-builder.config.js
   - Configure code signing settings for macOS and Windows
   - Set up proper app metadata and icons for installers
   - Test build process for all target platforms
   - _Requirements: 1.1, 1.2, 4.2, 4.4_
 
-- [ ] 10. Test installation and uninstallation process
+- [x] 10. Test installation and uninstallation process
   - Create tests/integration/packaging.spec.js for build validation
   - Test installer creation for macOS (.dmg), Windows (.exe), and Linux (.AppImage)
   - Verify application appears in system menus after installation
   - Test proper cleanup during uninstallation process
   - _Requirements: 1.2, 1.3, 1.5_
 
-- [ ] 11. Implement version management and build automation
+- [x] 11. Implement version management and build automation
   - Configure automatic version incrementing in build process
   - Set up build scripts for cross-platform compilation
   - Add package metadata validation
   - Test complete build-to-distribution workflow
   - _Requirements: 4.5_
 
-- [ ] 12. Final integration and system testing
+- [x] 12. Final integration and system testing
   - Test complete autostart workflow from installation to system boot
   - Verify settings persistence across application restarts
   - Test system tray minimization behavior on autostart

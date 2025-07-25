@@ -31,6 +31,15 @@
     "dist:win": "npm run build:win",
     "dist:linux": "npm run build:linux",
     "pack": "electron-builder --dir",
+    "version:patch": "node build/scripts/version-manager.js patch",
+    "version:minor": "node build/scripts/version-manager.js minor",
+    "version:major": "node build/scripts/version-manager.js major",
+    "version:current": "node -e \"console.log(require('./package.json').version)\"",
+    "build:cross": "node build/scripts/cross-platform-build.js all",
+    "build:validate": "node build/scripts/validate-build.js",
+    "build:test": "node build/scripts/test-build-workflow.js",
+    "build:metadata": "node -e \"const pkg=require('./package.json'); console.log(JSON.stringify({version:pkg.version,buildMetadata:pkg.buildMetadata},null,2))\"",
+    "release:cross": "node build/scripts/cross-platform-build.js all --increment-version",
     "postinstall": "electron-builder install-app-deps"
   },
   "keywords": [
