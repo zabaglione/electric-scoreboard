@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "RSS ニュース電光掲示板アプリ - RSSフィードから取得したニュースを横スクロール表示するデスクトップアプリケーション",
   "main": "main.js",
+  "type": "commonjs",
   "homepage": "https://github.com/your-username/rss-news-ticker",
   "repository": {
     "type": "git",
@@ -59,7 +60,7 @@
   "license": "MIT",
   "build": {
     "appId": "com.rss-news-ticker.app",
-    "productName": "RSS ニュース電光掲示板",
+    "productName": "RSSニュース電光掲示板",
     "directories": {
       "output": "dist"
     },
@@ -92,11 +93,17 @@
       "target": [
         {
           "target": "dmg",
-          "arch": ["x64", "arm64"]
+          "arch": [
+            "x64",
+            "arm64"
+          ]
         },
         {
           "target": "zip",
-          "arch": ["x64", "arm64"]
+          "arch": [
+            "x64",
+            "arm64"
+          ]
         }
       ],
       "icon": "build/icon.png",
@@ -130,14 +137,14 @@
   "devDependencies": {
     "@playwright/test": "^1.52.0",
     "@types/jest": "^29.5.14",
-    "electron": "^36.4.0",
+    "electron": "^32.2.5",
     "electron-builder": "^24.13.3",
     "jest": "^29.7.0",
     "jest-environment-jsdom": "^30.0.0-beta.3",
     "playwright": "^1.52.0"
   },
   "dependencies": {
-    "electron-store": "^10.0.1",
+    "electron-store": "^8.1.0",
     "rss-parser": "^3.13.0"
   }
 }
